@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag & Drop Excel File</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .drag-area {
+            width: 100%;
+            max-width: 400px;
+            height: 200px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ccc;
+            cursor: pointer;
+            margin: 0 auto;
+        }
+        .drag-area.active {
+            background-color: #f0f0f0;
+        }
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Drag & Drop your Excel File</h2>
+
+    <div class="drag-area" id="drag-area">
+        <p>Drag & Drop your Excel file here or click to upload</p>
+        <input type="file" id="fileInput" accept=".xlsx, .xls">
+    </div>
+
+    <script>
+        const dragArea = document.getElementById('drag-area');
+        const fileInput = document.getElementById('fileInput');
+
+        dragArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function () {
+            uploadFile(this.files[0]);
+        });
+
+        dragArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dragArea.classList.add('active');
+        });
+
+        dragArea.addEventListener('dragleave', () => {
+            dragArea.classList.remove('active');
+        });
+
+        dragArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dragArea.classList.remove('active');
+            const file = event.dataTransfer.files[0];
+            uploadFile(file);
+        });
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'modified_' + file.name;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+</body>
+</html>
